@@ -6,10 +6,10 @@ import (
 	"context"
 	"os"
 
+	"github.com/docktermj/demo-entity-search/httpserver"
 	"github.com/senzing/go-cmdhelping/cmdhelper"
 	"github.com/senzing/go-cmdhelping/option"
 	"github.com/senzing/go-cmdhelping/option/optiontype"
-	"github.com/senzing/template-go/examplepackage"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -35,10 +35,8 @@ var SomethingToSay = option.ContextVariable{
 }
 
 var ContextVariablesForMultiPlatform = []option.ContextVariable{
-	option.Configuration,
-	option.EngineConfigurationJson,
-	option.LogLevel,
-	SomethingToSay,
+	option.HttpPort,
+	option.ServerAddress,
 }
 
 var ContextVariables = append(ContextVariablesForMultiPlatform, ContextVariablesForOsArch...)
@@ -72,13 +70,12 @@ func PreRun(cobraCommand *cobra.Command, args []string) {
 
 // Used in construction of cobra.Command
 func RunE(_ *cobra.Command, _ []string) error {
-	var err error = nil
 	ctx := context.Background()
-	examplePackage := &examplepackage.ExamplePackageImpl{
-		Something: viper.GetString(SomethingToSay.Arg),
+	httpServer := &httpserver.HttpServerImpl{
+		ServerAddress: viper.GetString(option.ServerAddress.Arg),
+		ServerPort:    viper.GetInt(option.HttpPort.Arg),
 	}
-	err = examplePackage.SaySomething(ctx)
-	return err
+	return httpServer.Serve(ctx)
 }
 
 // Used in construction of cobra.Command
