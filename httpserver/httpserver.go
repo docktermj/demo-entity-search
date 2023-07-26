@@ -5,9 +5,14 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"log"
 	"net/http"
 
 	"github.com/docktermj/demo-entity-search/entitysearchservice"
+	"github.com/senzing/go-observing/observer"
+	"github.com/senzing/go-rest-api-service/senzingrestapi"
+	"github.com/senzing/go-rest-api-service/senzingrestservice"
+	"google.golang.org/grpc"
 )
 
 // ----------------------------------------------------------------------------
@@ -16,19 +21,30 @@ import (
 
 // HttpServerImpl is the default implementation of the HttpServer interface.
 type HttpServerImpl struct {
-	AllowedHostnames     []string
-	Arguments            []string
-	Command              string
-	ConnectionErrorLimit int
-	EnableAll            bool
-	EnableEntitySearch   bool
-	HtmlTitle            string
-	KeepalivePingTimeout int
-	MaxBufferSizeBytes   int
-	ServerAddress        string
-	ServerPort           int
-	TtyOnly              bool
-	UrlRoutePrefix       string
+	AllowedHostnames               []string
+	Arguments                      []string
+	Command                        string
+	ConnectionErrorLimit           int
+	EnableAll                      bool
+	EnableEntitySearch             bool
+	EnableSenzingRestAPI           bool
+	GrpcDialOptions                []grpc.DialOption
+	GrpcTarget                     string
+	HtmlTitle                      string
+	KeepalivePingTimeout           int
+	LogLevelName                   string
+	MaxBufferSizeBytes             int
+	ObserverOrigin                 string
+	Observers                      []observer.Observer
+	OpenApiSpecificationSpec       []byte
+	SenzingEngineConfigurationJson string
+	SenzingModuleName              string
+	SenzingVerboseLogging          int
+	ServerAddress                  string
+	ServerOptions                  []senzingrestapi.ServerOption
+	ServerPort                     int
+	TtyOnly                        bool
+	UrlRoutePrefix                 string
 }
 
 // ----------------------------------------------------------------------------
@@ -38,11 +54,39 @@ type HttpServerImpl struct {
 //go:embed static/*
 var static embed.FS
 
+func (httpServer *HttpServerImpl) getSenzingApiGenericMux(ctx context.Context, urlRoutePrefix string) *senzingrestapi.Server {
+	service := &senzingrestservice.SenzingRestServiceImpl{
+		GrpcDialOptions:                httpServer.GrpcDialOptions,
+		GrpcTarget:                     httpServer.GrpcTarget,
+		LogLevelName:                   httpServer.LogLevelName,
+		ObserverOrigin:                 httpServer.ObserverOrigin,
+		Observers:                      httpServer.Observers,
+		SenzingEngineConfigurationJson: httpServer.SenzingEngineConfigurationJson,
+		SenzingModuleName:              httpServer.SenzingModuleName,
+		SenzingVerboseLogging:          httpServer.SenzingVerboseLogging,
+		UrlRoutePrefix:                 urlRoutePrefix,
+		OpenApiSpecificationSpec:       httpServer.OpenApiSpecificationSpec,
+	}
+	srv, err := senzingrestapi.NewServer(service, httpServer.ServerOptions...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return srv
+}
+
 // --- http.ServeMux ----------------------------------------------------------
 
 func (httpServer *HttpServerImpl) getEntitySearchMux(ctx context.Context) *http.ServeMux {
 	service := &entitysearchservice.HttpServiceImpl{}
 	return service.Handler(ctx)
+}
+
+func (httpServer *HttpServerImpl) getSenzingApiMux(ctx context.Context) *senzingrestapi.Server {
+	return httpServer.getSenzingApiGenericMux(ctx, "/api")
+}
+
+func (httpServer *HttpServerImpl) getSenzingApi2Mux(ctx context.Context) *senzingrestapi.Server {
+	return httpServer.getSenzingApiGenericMux(ctx, "/entity-search/api")
 }
 
 // ----------------------------------------------------------------------------
@@ -61,17 +105,29 @@ func (httpServer *HttpServerImpl) Serve(ctx context.Context) error {
 
 	userMessage := ""
 
+	// Enable Senzing HTTP REST API.
+
+	if httpServer.EnableAll || httpServer.EnableSenzingRestAPI || httpServer.EnableEntitySearch {
+		senzingApiMux := httpServer.getSenzingApiMux(ctx)
+		rootMux.Handle("/api/", http.StripPrefix("/api", senzingApiMux))
+		userMessage = fmt.Sprintf("%sServing Senzing REST API at http://localhost:%d/%s\n", userMessage, httpServer.ServerPort, "api")
+	}
+
+	// Enable Senzing HTTP REST API as reverse proxy.
+
+	if httpServer.EnableAll || httpServer.EnableSenzingRestAPI || httpServer.EnableEntitySearch {
+		senzingApiMux := httpServer.getSenzingApi2Mux(ctx)
+		rootMux.Handle("/entity-search/api/", http.StripPrefix("/entityi-search/api", senzingApiMux))
+		userMessage = fmt.Sprintf("%sServing Senzing REST API Reverse Proxy at http://localhost:%d/%s\n", userMessage, httpServer.ServerPort, "/entity-search/api")
+	}
+
 	// Enable EntitySearch.
 
-	// if httpServer.EnableAll || httpServer.EnableEntitySearch {
-	// entitySearchMux := httpServer.getEntitySearchMux(ctx)
-	// rootMux.Handle("/entity-search/", http.StripPrefix("/entity-search", entitySearchMux))
-	// userMessage = fmt.Sprintf("%sServing EntitySearch at        http://localhost:%d/%s\n", userMessage, httpServer.ServerPort, "entity-search")
-	// }
-
-	entitySearchMux := httpServer.getEntitySearchMux(ctx)
-	rootMux.Handle("/entity-search/", http.StripPrefix("/entity-search", entitySearchMux))
-	userMessage = fmt.Sprintf("%sServing EntitySearch at        http://localhost:%d/%s\n", userMessage, httpServer.ServerPort, "entity-search")
+	if httpServer.EnableAll || httpServer.EnableEntitySearch {
+		entitySearchMux := httpServer.getEntitySearchMux(ctx)
+		rootMux.Handle("/entity-search/", http.StripPrefix("/entity-search", entitySearchMux))
+		userMessage = fmt.Sprintf("%sServing EntitySearch at        http://localhost:%d/%s\n", userMessage, httpServer.ServerPort, "entity-search")
+	}
 
 	// Add route to static files.
 
