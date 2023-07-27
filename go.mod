@@ -3,13 +3,14 @@ module github.com/docktermj/demo-entity-search
 go 1.20
 
 require (
-	github.com/senzing/go-cmdhelping v0.1.1
+	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8
+	github.com/senzing/go-cmdhelping v0.1.2
 	github.com/senzing/go-observing v0.2.6
-	github.com/senzing/go-rest-api-service v0.0.3
+	github.com/senzing/go-rest-api-service v0.0.4
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
-	google.golang.org/grpc v1.56.2
+	google.golang.org/grpc v1.57.0
 )
 
 require (
@@ -31,7 +32,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/ogen-go/ogen v0.71.1 // indirect
+	github.com/ogen-go/ogen v0.72.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.9 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
@@ -59,7 +60,7 @@ require (
 	golang.org/x/sync v0.3.0 // indirect
 	golang.org/x/sys v0.10.0 // indirect
 	golang.org/x/text v0.11.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230725213213-b022f6e96895 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20230726155614-23370e0ffb3e // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

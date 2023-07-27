@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/docktermj/demo-entity-search/entitysearchservice"
+	"github.com/pkg/browser"
 	"github.com/senzing/go-observing/observer"
 	"github.com/senzing/go-rest-api-service/senzingrestapi"
 	"github.com/senzing/go-rest-api-service/senzingrestservice"
@@ -149,9 +150,9 @@ func (httpServer *HttpServerImpl) Serve(ctx context.Context) error {
 
 	// Start a web browser.  Unless disabled.
 
-	// if !httpServer.TtyOnly {
-	// 	_ = browser.OpenURL(fmt.Sprintf("http://localhost:%d", httpServer.ServerPort))
-	// }
+	if !httpServer.TtyOnly {
+		_ = browser.OpenURL(fmt.Sprintf("http://localhost:%d", httpServer.ServerPort))
+	}
 
 	return server.ListenAndServe()
 }
