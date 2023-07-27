@@ -3,7 +3,7 @@ module github.com/docktermj/demo-entity-search
 go 1.20
 
 require (
-	github.com/senzing/go-cmdhelping v0.1.1
+	github.com/senzing/go-cmdhelping v0.1.2
 	github.com/senzing/template-go v0.2.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
