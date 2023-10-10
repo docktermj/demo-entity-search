@@ -111,15 +111,15 @@ func (httpServer *HttpServerImpl) Serve(ctx context.Context) error {
 	if httpServer.EnableAll || httpServer.EnableSenzingRestAPI || httpServer.EnableEntitySearch {
 		senzingApiMux := httpServer.getSenzingApiMux(ctx)
 		rootMux.Handle("/api/", http.StripPrefix("/api", senzingApiMux))
-		userMessage = fmt.Sprintf("%sServing Senzing REST API at http://localhost:%d/%s\n", userMessage, httpServer.ServerPort, "api")
+		userMessage = fmt.Sprintf("%sServing Senzing REST API at               http://localhost:%d/%s\n", userMessage, httpServer.ServerPort, "api")
 	}
 
 	// Enable Senzing HTTP REST API as reverse proxy.
 
 	if httpServer.EnableAll || httpServer.EnableSenzingRestAPI || httpServer.EnableEntitySearch {
 		senzingApiMux := httpServer.getSenzingApi2Mux(ctx)
-		rootMux.Handle("/entity-search/api/", http.StripPrefix("/entityi-search/api", senzingApiMux))
-		userMessage = fmt.Sprintf("%sServing Senzing REST API Reverse Proxy at http://localhost:%d/%s\n", userMessage, httpServer.ServerPort, "/entity-search/api")
+		rootMux.Handle("/entity-search/api/", http.StripPrefix("/entity-search/api", senzingApiMux))
+		userMessage = fmt.Sprintf("%sServing Senzing REST API Reverse Proxy at http://localhost:%d/%s\n", userMessage, httpServer.ServerPort, "entity-search/api")
 	}
 
 	// Enable EntitySearch.
@@ -127,7 +127,7 @@ func (httpServer *HttpServerImpl) Serve(ctx context.Context) error {
 	if httpServer.EnableAll || httpServer.EnableEntitySearch {
 		entitySearchMux := httpServer.getEntitySearchMux(ctx)
 		rootMux.Handle("/entity-search/", http.StripPrefix("/entity-search", entitySearchMux))
-		userMessage = fmt.Sprintf("%sServing EntitySearch at        http://localhost:%d/%s\n", userMessage, httpServer.ServerPort, "entity-search")
+		userMessage = fmt.Sprintf("%sServing EntitySearch at                   http://localhost:%d/%s\n", userMessage, httpServer.ServerPort, "entity-search")
 	}
 
 	// Add route to static files.
